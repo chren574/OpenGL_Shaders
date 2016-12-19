@@ -67,27 +67,34 @@ int main()
 		-0.5f, -0.5f, 0.0f,  0.0f, 1.0f, 0.0f,   // Bottom Left
 		0.0f,  0.5f, 0.0f,  0.0f, 0.0f, 1.0f    // Top 
 	};
+	GLuint indices[] = {  // Note that we start from 0!
+		0, 2, 1  // First Triangle
+
+	};
 
 
 	/* ----------------------------------- BUFFERS -----------------------------------*/
 	// Vertex Buffer Object, Vertex Array Object, Element Buffer Objects
-	GLuint VBO, VAO;
+	GLuint VBO, VAO, EBO;
 	// Creates a ID for the buffer 
 	glGenVertexArrays(1, &VAO);
 	glGenBuffers(1, &VBO);
-
+	glGenBuffers(1, &EBO);
+	
 	// 1. Bind Vertex Array Object
 	glBindVertexArray(VAO);
 	// 2. Copy our vertices array in a buffer for OpenGL to use
 	// Bind the buffer to a vertex array.
 	// OpenGL allows us to bind to several buffers at once as long as they have a different buffer type.
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
 	// Copy the data to the bound buffer
 	// GL_STATIC_DRAW: the data will most likely not change at all or very rarely.
 	// GL_DYNAMIC_DRAW: the data is likely to change a lot.
 	// GL_STREAM_DRAW: the data will change every time it is drawn.
 	// 3. Then set our vertex attributes pointers
 	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
 	// ARG 0: specifies which vertex attribute we want to configure, layout(location = 0).
 	// ARG 1: specifies the size of the vertex attribute.The vertex attribute is a vec3 so it is composed of 3 values.
@@ -124,7 +131,9 @@ int main()
 		glBindVertexArray(VAO);
 		ourShader.Use();
 
-		glDrawArrays(GL_TRIANGLES, 0, 3);
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+		glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_INT, 0);
+		//glDrawArrays(GL_TRIANGLES, 0, 3);
 		//glDrawArrays(GL_LINE_LOOP, 0, 3);
 
 		glBindVertexArray(0);
@@ -136,6 +145,7 @@ int main()
 	// Properly de-allocate all resources once they've outlived their purpose
 	glDeleteVertexArrays(1, &VAO);
 	glDeleteBuffers(1, &VBO);
+	glDeleteBuffers(1, &EBO);
 	glfwTerminate();
 	return 0;
 }
