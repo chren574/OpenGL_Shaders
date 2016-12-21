@@ -1,5 +1,3 @@
-#include <iostream>
-
 // GLEW
 #define GLEW_STATIC
 #include <GL/glew.h>
@@ -7,8 +5,9 @@
 // GLFW
 #include <GLFW/glfw3.h>
 
-// Other includes
 #include "Shader.h"
+
+#include <iostream> // std::cout
 
 // Function prototypes
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mode);
@@ -19,15 +18,13 @@ const int WIDTH = 800, HEIGHT = 600;
 int main()
 {
 	/* ----------------------------------- INIT WINDOW -----------------------------------*/
+
 	glfwInit();
-	// Only OpenGL 3 is used
-	// ENUM: GLFW_CONTEXT_VERSION_MAJOR, VALUE: 3
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-	// Errors if legacy code is used
-	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-	// Not resizeble by the user
-	glfwWindowHint(GLFW_RESIZABLE, GL_FALSE);
+	
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3); // Newest supported OpenGL version 
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3); // Oldest supported OpenGL version
+	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE); // Errors if legacy code is used
+	glfwWindowHint(GLFW_RESIZABLE, GL_FALSE); // Not resizeble by the user
 	
 	GLFWwindow* window = glfwCreateWindow(WIDTH, HEIGHT, "LearnOpenGL", nullptr, nullptr);
 	if (window == nullptr)
@@ -38,10 +35,9 @@ int main()
 	}
 	glfwMakeContextCurrent(window);
 	
-	// Set callback function for input
-	glfwSetKeyCallback(window, key_callback);
+	glfwSetKeyCallback(window, key_callback); // Set callback function for input
 
-	// etting glewExperimental to true ensures GLEW uses more modern techniques for managing OpenGL functionality. 
+	// Setting glewExperimental to true ensures GLEW uses more modern techniques for managing OpenGL functionality. 
 	// Leaving it to its default value of GL_FALSE might give issues when using the core profile of OpenGL.
 	glewExperimental = GL_TRUE;
 
@@ -57,9 +53,8 @@ int main()
 	glViewport(0, 0, width, height);
 
 	/* ----------------------------------- SHADERS -----------------------------------*/
-	// Build and compile our shader program
-	Shader ourShader("Shaders/shader.vert", "Shaders/shader.frag");
 
+	Shader ourShader("Shaders/shader.vert", "Shaders/shader.frag"); // Build and compile our shader program
 
 	GLfloat vertices[] = {
 		// Positions         // Colors
@@ -67,62 +62,59 @@ int main()
 		-0.5f, -0.5f, 0.0f,  0.0f, 1.0f, 0.0f,   // Bottom Left
 		0.0f,  0.5f, 0.0f,  0.0f, 0.0f, 1.0f    // Top 
 	};
+
 	GLuint indices[] = {  // Note that we start from 0!
 		0, 2, 1  // First Triangle
-
 	};
 
-
 	/* ----------------------------------- BUFFERS -----------------------------------*/
+	
 	// Vertex Buffer Object, Vertex Array Object, Element Buffer Objects
-	GLuint VBO, VAO, EBO;
-	// Creates a ID for the buffer 
+	GLuint VAO, VBO, EBO;
+
+	// Creates IDs for the buffers 
 	glGenVertexArrays(1, &VAO);
 	glGenBuffers(1, &VBO);
 	glGenBuffers(1, &EBO);
 	
-	// 1. Bind Vertex Array Object
-	glBindVertexArray(VAO);
-	// 2. Copy our vertices array in a buffer for OpenGL to use
+	glBindVertexArray(VAO); // Bind Vertex Array Object
+	
 	// Bind the buffer to a vertex array.
 	// OpenGL allows us to bind to several buffers at once as long as they have a different buffer type.
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+
 	// Copy the data to the bound buffer
 	// GL_STATIC_DRAW: the data will most likely not change at all or very rarely.
 	// GL_DYNAMIC_DRAW: the data is likely to change a lot.
 	// GL_STREAM_DRAW: the data will change every time it is drawn.
-	// 3. Then set our vertex attributes pointers
 	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
-	// ARG 0: specifies which vertex attribute we want to configure, layout(location = 0).
-	// ARG 1: specifies the size of the vertex attribute.The vertex attribute is a vec3 so it is composed of 3 values.
+	// ARG 0: layout: (location = 0).
+	// ARG 1: specifies the size of the vertex attribute
 	// ARG 2: specifies the type of the data which is GL_FLOAT(a vec* in GLSL consists of floating point values).
-	// ARG 3: specifies if we want the data to be normalized. If we set this to GL_TRUE all the data that has a value not between 0 (or -1 for signed data) and 1 will be mapped to those values.
-	// ARG 4: known as the stride and tells us the space between consecutive vertex attribute sets.Since the next set of position data is located exactly 3 times the size of a GLfloat away we specify that value as the stride.
+	// ARG 3: specifies if we want the data to be normalized.
+	// ARG 4: known as the stride and tells us the space between consecutive vertex attribute sets.
 	// Note that since we know that the array is tightly packed(there is no space between the next vertex attribute value) we could've also specified the stride as 0 to let OpenGL determine the stride (this only works when values are tightly packed). 
-	// Whenever we have more vertex attributes we have to carefully define the spacing between each vertex attribute but we'll get to see more examples of that later on.
 	// ARG 5: The last parameter is of type GLvoid* and thus requires that weird cast.This is the offset of where the position data begins in the buffer.
-	// Since the position data is at the start of the data array this value is just 0. We will explore this parameter in more detail later on
-	//glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid*)0);
-
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (GLvoid*)0); // Position
 	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (GLvoid*)(3 * sizeof(GLfloat))); // Color
 
-	glEnableVertexAttribArray(0);
-	glEnableVertexAttribArray(1);
-	//4. Unbind the VAO
-	glBindVertexArray(0);
+	glEnableVertexAttribArray(0); // (location = 0)
+	glEnableVertexAttribArray(1); // (location = 1)
+	
+	glBindVertexArray(0); // Unbind the VAO
 
 	/* ---------------------------------- RENDER LOOP -----------------------------------*/
+
 	while (!glfwWindowShouldClose(window))
 	{
-		// Checks if any events are triggerd (keyboard, mouse...)
+		// Checks if any events are triggerd (keyboard, mouse etc)
 		glfwPollEvents();
 
 		// Clear the colorbuffer
-		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+		glClearColor(0.2f, 0.3f, 0.3f, 1.0f); // Window color
 		glClear(GL_COLOR_BUFFER_BIT);
 		
 		GLfloat offset = 0.5f;
@@ -131,21 +123,23 @@ int main()
 		glBindVertexArray(VAO);
 		ourShader.Use();
 
-		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-		glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_INT, 0);
+		// without EBO
 		//glDrawArrays(GL_TRIANGLES, 0, 3);
 		//glDrawArrays(GL_LINE_LOOP, 0, 3);
 
-		glBindVertexArray(0);
+		// with EBO
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+		glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_INT, 0);
 
-		// Swap the screen buffers
-		glfwSwapBuffers(window);
+		glBindVertexArray(0);
+		
+		glfwSwapBuffers(window); // Swap the screen buffers
 	}
 
 	// Properly de-allocate all resources once they've outlived their purpose
-	glDeleteVertexArrays(1, &VAO);
 	glDeleteBuffers(1, &VBO);
 	glDeleteBuffers(1, &EBO);
+	glDeleteVertexArrays(1, &VAO);
 	glfwTerminate();
 	return 0;
 }
